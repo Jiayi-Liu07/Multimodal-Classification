@@ -6,23 +6,34 @@ from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 from OCTDataset import OCTDataset
 import matplotlib.pyplot as plt
-import timm
+#import timm
+import torchvision.models as models
 
 # ===============================
 # 1. Image Model (RETFound Encoder)
 # ===============================
-class RETFoundEncoder(nn.Module):
-    def __init__(self, model_name="timm/retfound"):
-        super(RETFoundEncoder, self).__init__()
-        # Load the RETFound model and remove the classification head
-        self.model = timm.create_model(model_name, pretrained=True, num_classes=0)
-        self.feature_dim = self.model.num_features
+# class RETFoundEncoder(nn.Module):
+#     def __init__(self, model_name="timm/retfound"):
+#         super(RETFoundEncoder, self).__init__()
+#         # Load the RETFound model and remove the classification head
+#         self.model = timm.create_model(model_name, pretrained=True, num_classes=0)
+#         self.feature_dim = self.model.num_features
 
-    def forward(self, x):
-        return self.model(x)  # Return image features
+#     def forward(self, x):
+#         return self.model(x)  # Return image features
 
 # ===============================
-# 4. Multiclass Classification Module
+
+class ResNetClassifier(nn.Module):
+    def __init__(self):
+        super(ResNetClassifier, self).__init__()
+        self.model = models.resnet18(pretrained=True)
+
+    def forward(self, x):
+        return self.model(x)
+
+# ===============================
+# 2. Multiclass Classification Module
 # ===============================
 class MulticlassClassifier(nn.Module):
     def __init__(self, image_feature_dim, num_classes):
@@ -128,8 +139,8 @@ if __name__ == "__main__":
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=16, shuffle=False)
 
     # Model and optimizer
-    image_encoder = RETFoundEncoder()
-    multiclass_classifier = MulticlassClassifier(image_encoder.feature_dim, num_classes=6)
+    image_encoder = ResNetClassifier()
+    multiclass_classifier = MulticlassClassifier(image_encoder.model.fc.in_features, num_classes=6)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(multiclass_classifier.parameters(), lr=1e-4)
 

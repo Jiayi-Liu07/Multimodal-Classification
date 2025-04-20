@@ -147,8 +147,9 @@ widgetsnbextension @ file:///home/conda/feedstock_root/build_artifacts/widgetsnb
 win_inet_pton @ file:///D:/bld/win_inet_pton_1733130564612/work
 zipp @ file:///home/conda/feedstock_root/build_artifacts/zipp_1732827521216/work
 zstandard==0.23.0
+# --- Added for oct_preprocessor ----
 scikit-image==0.25.2
 bm3d==4.0.3
-pillow==11.2.1
+# pillow==11.2.1
 pyshearlab @ git+https://github.com/stefanloock/pyshearlab/archive/master.zip
 skipy==0.2.3

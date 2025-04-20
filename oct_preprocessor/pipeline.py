@@ -5,6 +5,7 @@ from .flattening import flatten_image
 from .postprocessing import postprocess_edges
 from .visualization import show_edge_detection, show_skeleton
 import matplotlib.pyplot as plt
+import numpy as np
 
 def process_oct_image(
     file_path,
@@ -35,17 +36,21 @@ def process_oct_image(
     even_coeffs, odd_coeffs = get_shearlet_coeffs(image, nScales=nScales1, shearLevels=shearLevels1)
     edge_map = extract_edges(even_coeffs, odd_coeffs, 2, reconScales1, epsilon1, T1)
 
+    binary_edges = edge_map > edge_threshold
+
     flat_image, polyCoeffs, cut_top, cut_bottom, reference_row = flatten_image(
-        edge_map, image, reference_row=qLen//2, poly_deg=poly_deg,
+        binary_edges, image, reference_row=qLen//2, poly_deg=poly_deg,
         padding_top=padding_top, padding_bot=padding_bot, flatten_mode=flatten_mode,
         sigma=flatten_sigma
     )
-
+  
     even2, odd2 = get_shearlet_coeffs(flat_image, nScales=nScales2, shearLevels=shearLevels2)
     edge_map2 = extract_edges(even2, odd2, 2, reconScales2, epsilon2, T2)
 
+    binary_edges_2 = edge_map2 > edge_threshold
+
     binary_edges, skeleton, overlay, skeleton_overlay = postprocess_edges(
-        edge_map2, flat_image, threshold=edge_threshold, footprint_shape=footprint
+        binary_edges_2, flat_image, threshold=edge_threshold, footprint_shape=footprint
     )
 
     if visualize:
@@ -57,8 +62,4 @@ def process_oct_image(
 
 
 
-    plt.figure(figsize=(5, 5))
-    plt.imshow(flat_image, cmap='gray')
-    plt.title("Flat")
-    plt.axis('off')
-    plt.show()
+   

@@ -1,6 +1,8 @@
 import numpy as np
 from skimage.transform import resize
 from bm3d import bm3d, BM3DProfile
+import matplotlib.pyplot as plt
+
 
 def flatten_image(binary_edges, image, reference_row=256, poly_deg=4,
                   padding_top=100, padding_bot=200, flatten_mode='crop', sigma=0.1):
@@ -26,11 +28,19 @@ def flatten_image(binary_edges, image, reference_row=256, poly_deg=4,
     y_max_full = np.interp(x_full, x_coords, y_max_coords)
 
     polyCoeffs = np.polyfit(x_full, y_coords_full, deg=poly_deg)
+
+
+
     flattened = np.zeros_like(image)
     for x in range(ny):
         y_boundary = int(round(np.polyval(polyCoeffs, x)))
         shift = reference_row - y_boundary
         flattened[:, x] = np.roll(image[:, x], shift)
+    
+    # plt.figure(figsize=(5, 5))
+    # plt.imshow(flattened, cmap='gray')
+    # plt.title("Just Flattened (before crop/pad)")
+    # plt.show()
 
     dx_min = y_min_full - y_coords_full
     dx_max = y_max_full - y_coords_full
@@ -40,6 +50,15 @@ def flatten_image(binary_edges, image, reference_row=256, poly_deg=4,
 
     cut_top = reference_row + avg_dx_min - padding_top
     cut_bottom = reference_row + avg_dx_max + padding_bot
+    
+    # plt.figure(figsize=(5, 5))
+    # plt.imshow(image, cmap='gray')
+    # plt.plot(x_full, np.polyval(polyCoeffs, x_full), 'r-', label='Middle Boundary')
+    # plt.plot(x_full, np.polyval(polyCoeffs, x_full) + avg_dx_min - padding_top, 'y-', label='Upper Boundary')
+    # plt.plot(x_full, np.polyval(polyCoeffs, x_full) + avg_dx_max + padding_bot, 'b-', label='Lower Boundary')
+    # plt.axis('off')
+    # plt.title("Original Image (before crop/pad)")
+    # plt.show()
 
     if flatten_mode == 'pad':
         cut_image = flattened[max(cut_top, 0):min(cut_bottom, nx), :]
@@ -54,6 +73,7 @@ def flatten_image(binary_edges, image, reference_row=256, poly_deg=4,
         final_image = resize(cut_image, (nx, ny), order=1, preserve_range=True, anti_aliasing=True)
     else:
         raise ValueError(f"Unknown flatten_mode: {flatten_mode}. Use 'pad' or 'crop'.")
+    
 
     final_image_filt = bm3d(final_image, sigma, profile=BM3DProfile())
     return final_image_filt, polyCoeffs, cut_top, cut_bottom, reference_row
